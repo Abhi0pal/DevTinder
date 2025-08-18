@@ -57,18 +57,47 @@ const {adminAuth,userAuth}=require("./middleware/auth");
 
 //middleware phele hei check kar liya admin ko agge jane dena hai ya nahi 
 
-app.use("/admin",adminAuth);
+// app.use("/admin",adminAuth);
+// 
+// 
+// 
+// app.get("/admin/getAllData",(req,res)=>{
+//     res.send("Data Will Be Sent...");
+// });
+// 
+// app.get("/user",userAuth,(req,res,next)=>{
+//     res.send("User Data Will be Send");
+// });
 
 
 
-app.get("/admin/getAllData",(req,res)=>{
-    res.send("Data Will Be Sent...");
+//Error Handling 
+
+
+app.get("/user",(req,res)=>{
+    try{
+        throw new Error("azdsdds");
+        res.send("user Data is Sent");
+        
+
+    }
+    catch(err){
+        res.status(500).send("Contact to Support Team...");
+
+    }
+
 });
 
-app.get("/user",userAuth,(req,res,next)=>{
-    res.send("User Data Will be Send");
-});
+// first way
 
+app.use("/",(err,req,res,next)=>{
+    if(err){
+        res.status(500).send("Something went wrong");
+
+    }
+
+
+});
 
 app.listen(3000,()=>{
     console.log("now data successfully loaded");
