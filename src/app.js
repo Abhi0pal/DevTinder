@@ -1,8 +1,9 @@
 const express = require("express");
+const connectDB=require("./config/database");
 
 const app = express();
 
-const {adminAuth,userAuth}=require("./middleware/auth");
+// const {adminAuth,userAuth}=require("./middleware/auth");
 
 
 // app.use("/happy", (req, res) => {
@@ -74,32 +75,59 @@ const {adminAuth,userAuth}=require("./middleware/auth");
 //Error Handling 
 
 
-app.get("/user",(req,res)=>{
-    try{
-        throw new Error("azdsdds");
-        res.send("user Data is Sent");
-        
-
-    }
-    catch(err){
-        res.status(500).send("Contact to Support Team...");
-
-    }
-
-});
+// app.get("/user",(req,res)=>{
+//     try{
+//         throw new Error("azdsdds");
+//         res.send("user Data is Sent");
+//         
+// 
+//     }
+//     catch(err){
+//         res.status(500).send("Contact to Support Team...");
+// 
+//     }
+// 
+// });
 
 // first way
 
-app.use("/",(err,req,res,next)=>{
-    if(err){
-        res.status(500).send("Something went wrong");
+// app.use("/",(err,req,res,next)=>{
+//     if(err){
+//         res.status(500).send("Something went wrong");
+// 
+//     }
+// 
+// 
+// });
 
-    }
 
 
-});
+//connect database first then port will listen
+//this is for first we will connect to databaase then we will listing to port 
 
-app.listen(3000,()=>{
-    console.log("now data successfully loaded");
+connectDB().then(()=>{
+    console.log("Now DataBase Will be Connected");
+    app.listen(3000,()=>{
+        console.log("Server is Sucessfully listening to the port 3000");
+        
+    })
+}).catch((err)=>{
+    console.log("Error will be Encounter");
     
+
 })
+// Both are same ;
+
+
+// connectDB().then(
+//     ()=>{
+//         console.log("Connected Successfully...");
+// }).catch(err=>{
+//     console.log("Database cannot be established");
+// });
+
+
+// app.listen(3000,()=>{
+//     console.log("now data successfully loaded");
+//     
+// })
