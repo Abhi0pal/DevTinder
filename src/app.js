@@ -105,97 +105,84 @@ app.post("/signup", async (req, res) => {
     await user.save(); //phir yebdata save karne ka method
     res.send("User registedred Successfully");
   } catch (err) {
-    res.status(400).send("error saving the user");
+    res.status(400).send("error saving the user"+err.message);
   }
 });
 
 //Get User by email
 
-app.get("/user",async (req,res)=>{
-    const userEmail=req.body.emailID;
+app.get("/user", async (req, res) => {
+  const userEmail = req.body.emailID;
 
-    try{
-        const user=await User.find({emailID:userEmail});
-        if(user.length===0){
-            res.status(401).send("Sorry User Not Found");
-
-        }
-        else{
-            res.send(user);
-        }
+  try {
+    const user = await User.find({ emailID: userEmail });
+    if (user.length === 0) {
+      res.status(401).send("Sorry User Not Found");
+    } else {
+      res.send(user);
     }
-    catch(err){
-        res.status(400).send("Error will Occur");
-
-    }
-
-    
-
-})
-
-
-
-
-
+  } catch (err) {
+    res.status(400).send("Error will Occur");
+  }
+});
 
 //Feed API - Get /feed- get ALL the users from the database
 app.get("/feed", async (req, res) => {
-    try{
-        //Get all the data 
-        const user=await User.find({});
-        res.send(user);
-    }
-    catch(err){
-        res.status(401).send("Something went Wrong");
-    }
-
-
-
+  try {
+    //Get all the data
+    const user = await User.find({});
+    res.send(user);
+  } catch (err) {
+    res.status(401).send("Something went Wrong");
+  }
 });
-
 
 // delete API delete the user from data base
-app.delete("/user",async(req,res)=>{
-    const userId=req.body.userId;  //USer id fetch hogi jissse delete karna hai 
-    try{
-        const user=await User.findByIdAndDelete(userId);
-        res.send("User Deleted Successfully");
-
-    }
-    catch(err){
-        res.status(400).send("Error We Can't Delete");
-
-    }
+app.delete("/user", async (req, res) => {
+  const userId = req.body.userId; //USer id fetch hogi jissse delete karna hai
+  try {
+    const user = await User.findByIdAndDelete(userId);
+    res.send("User Deleted Successfully");
+  } catch (err) {
+    res.status(400).send("Error We Can't Delete");
+  }
 });
 
-//Update the user Details 
+//Update the user Details
 
-app.patch("/user",async(req,res)=>{
-    const userId=req.body._id; //user Id where changes will be perform
-    const data=req.body; //yhe upadate karna hah frontend se aye ga 
-    try {
-        const user=await User.findByIdAndUpdate(userId,data,{
-            returnDocument:"after",
-            runValidators:true,
-        });
-        console.log(user);
-        
-        res.send("User Updated SuccessFully...");
-        
-    } catch (err) {
-        res.status(500).send("Error will Occur...")
-        
+app.patch("/user/:_id", async (req, res) => {
+  const userId = req.params._id; //user Id where changes will be perform
+  const data = req.body; //yhe upadate karna hah frontend se aye ga
+
+  try {
+
+    //we won't allow to update some field in schema like emain ,first name -this process called Data Sanitization(not exactly that but something is that)
+    //this line means that-> when a user tries to update data, only the fields defined in ALLOWED_UPDATES can be modified. It prevents updating restricted fields like password or role
+    const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age"];
+    //looping all the key in Allowed_Update check it data have this key or not
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) {
+     return res.status(400).send("We can't update this...Sorry");
+    }
+    if(data?.skills>10){
+        throw new Error("Skills cannot be more than 10...")
+
     }
 
 
+    const user = await User.findByIdAndUpdate(userId, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    console.log(user);
+
+    res.send("User Updated SuccessFully...");
+  } catch (err) {
+    res.status(500).send("Error will Occur...");
+  }
 });
-
-
-
-
-
-
-
 
 //connect database first then port will listen
 //this is for first we will connect to databaase then we will listing to port
