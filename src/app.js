@@ -99,10 +99,10 @@ app.use(express.json()); //convert data into json format
 //Post API (SignUp API)
 
 app.post("/signup", async (req, res) => {
-  //Creating a new instance pf user Model
-  const user = new User(req.body);
+  //Creating a new instance of user Model
+  const user = new User(req.body); //front end se aye ga data
   try {
-    await user.save();
+    await user.save(); //phir yebdata save karne ka method
     res.send("User registedred Successfully");
   } catch (err) {
     res.status(400).send("error saving the user");
@@ -174,11 +174,16 @@ app.patch("/user",async(req,res)=>{
     const userId=req.body._id; //user Id where changes will be perform
     const data=req.body; //yhe upadate karna hah frontend se aye ga 
     try {
-        await User.findByIdAndUpdate({_id:userId},data);
+        const user=await User.findByIdAndUpdate(userId,data,{
+            returnDocument:"after",
+            runValidators:true,
+        });
+        console.log(user);
+        
         res.send("User Updated SuccessFully...");
         
     } catch (err) {
-        res.status().send("Error will Occur...")
+        res.status(500).send("Error will Occur...")
         
     }
 
