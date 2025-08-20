@@ -95,8 +95,11 @@ const app = express();
 
 //API
 app.use(express.json()); //convert data into json format
+
+//Post API (SignUp API)
+
 app.post("/signup", async (req, res) => {
-    //Creating a new instance pf user Model
+  //Creating a new instance pf user Model
   const user = new User(req.body);
   try {
     await user.save();
@@ -105,6 +108,89 @@ app.post("/signup", async (req, res) => {
     res.status(400).send("error saving the user");
   }
 });
+
+//Get User by email
+
+app.get("/user",async (req,res)=>{
+    const userEmail=req.body.emailID;
+
+    try{
+        const user=await User.find({emailID:userEmail});
+        if(user.length===0){
+            res.status(401).send("Sorry User Not Found");
+
+        }
+        else{
+            res.send(user);
+        }
+    }
+    catch(err){
+        res.status(400).send("Error will Occur");
+
+    }
+
+    
+
+})
+
+
+
+
+
+
+//Feed API - Get /feed- get ALL the users from the database
+app.get("/feed", async (req, res) => {
+    try{
+        //Get all the data 
+        const user=await User.find({});
+        res.send(user);
+    }
+    catch(err){
+        res.status(401).send("Something went Wrong");
+    }
+
+
+
+});
+
+
+// delete API delete the user from data base
+app.delete("/user",async(req,res)=>{
+    const userId=req.body.userId;  //USer id fetch hogi jissse delete karna hai 
+    try{
+        const user=await User.findByIdAndDelete(userId);
+        res.send("User Deleted Successfully");
+
+    }
+    catch(err){
+        res.status(400).send("Error We Can't Delete");
+
+    }
+});
+
+//Update the user Details 
+
+app.patch("/user",async(req,res)=>{
+    const userId=req.body._id; //user Id where changes will be perform
+    const data=req.body; //yhe upadate karna hah frontend se aye ga 
+    try {
+        await User.findByIdAndUpdate({_id:userId},data);
+        res.send("User Updated SuccessFully...");
+        
+    } catch (err) {
+        res.status().send("Error will Occur...")
+        
+    }
+
+
+});
+
+
+
+
+
+
+
 
 //connect database first then port will listen
 //this is for first we will connect to databaase then we will listing to port
