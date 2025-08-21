@@ -6,6 +6,10 @@ const app = express();
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const {userAuth}=require("./middleware/auth");
+
+
+
 
 //here we import Validation made by us
 const { validationSignUpData } = require("./utils/validation.js");
@@ -171,15 +175,16 @@ app.post("/login", async (req, res) => {
 });
 
 //Profile API
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth,async (req, res) => {
   try {
-    const cookies = req.cookies;
+   
+    const user=req.user;
+    if(!user){
+        throw new user("USer will not be present..");
 
-    const { token } = cookies;
-
-    //validate my token
-    const decodedMessage = jwt.verify(token, "DEVTINDER");
-    console.log(decodedMessage);
+    }
+    console.log("Logged in User is: "+user);
+    
     res.send("Reading Cookies....");
   } catch (err) {
     res.status(401).send("Unauthorized: " + err.message);
