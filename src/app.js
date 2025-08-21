@@ -3,10 +3,12 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 
 const app = express();
-const bcrypt=require("bcrypt");
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 //here we import Validation made by us
-const {validationSignUpData}=require("./utils/validation.js")
+const { validationSignUpData } = require("./utils/validation.js");
 
 // const {adminAuth,userAuth}=require("./middleware/auth");
 
@@ -97,82 +99,92 @@ const {validationSignUpData}=require("./utils/validation.js")
 //
 // });
 
-//API
+//API these are middleware
 app.use(express.json()); //convert data into json format
+app.use(cookieParser());
 
 //Post API (SignUp API)
 
 app.post("/signup", async (req, res) => {
-    try {
+  try {
     //validation of data
     validationSignUpData(req); //import it from validation.js
-    //extracting the field out 
-    const {firstName,lastName,emailID,password}=req.body;
+    //extracting the field out
+    const { firstName, lastName, emailID, password } = req.body;
     //encrypt our password
-    const passwordHash= await bcrypt.hash(password,10);
+    const passwordHash = await bcrypt.hash(password, 10);
     // console.log(passwordHash);
-    
 
-
-
-
-
-
-
-  //Creating a new instance of user Model
-//   this is the bad way to fetch data from frontend
-  //const user = new User(req.body); //front end se aye ga data
-    //this is the best way to fetch data 
-  const user= new User({
-        firstName,
-        lastName,
-        emailID,
-        password:passwordHash
+    //Creating a new instance of user Model
+    //   this is the bad way to fetch data from frontend
+    //const user = new User(req.body); //front end se aye ga data
+    //this is the best way to fetch data
+    const user = new User({
+      firstName,
+      lastName,
+      emailID,
+      password: passwordHash,
     });
     await user.save(); //phir yebdata save karne ka method
     res.send("User registedred Successfully");
   } catch (err) {
-    res.status(400).send("Error: "+err.message);
+    res.status(400).send("Error: " + err.message);
   }
 });
 
-
 //Log in API
 
-app.post("/login",async(req,res)=>{
-    try {
-        //it validate our emailId and password when user will Login
-        const{emailID,password}=req.body;
-        //check user emailId is in  database or not
-        const user=await User.findOne({emailID:emailID});
-        if(!user){
-            throw new Error("Email Id not Found in our System");
-
-        }
-        //compare the password hashpassword in database with user enter in login page 
-        const isPasswordValid=await bcrypt.compare(password,user.password)
-        if(isPasswordValid){
-            res.send("Login Successfully...");
-
-        }else{
-            throw new Error("Password is not Valid...");
-        }
-    } catch (err) {
-        res.status(400).send("Error:"+err.message);
-        
+app.post("/login", async (req, res) => {
+  try {
+    //it validate our emailId and password when user will Login
+    const { emailID, password } = req.body;
+    //check user emailId is in  database or not
+    const user = await User.findOne({ emailID: emailID });
+    if (!user) {
+      throw new Error("Email Id not Found in our System");
     }
+    //compare the password hashpassword in database with user enter in login page
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      //all work of cookies and jwt
+      //create jwt TOKEN
+      const token = jwt.sign({ _id: user._id }, "DEVTINDER");
+      // OR send in response body
+      // store token in cookie
+      res.cookie("token", token, {
+        httpOnly: true, // prevents client JS from reading cookie
+        secure: false, // true if using HTTPS
+        sameSite: "strict",
+      });
+      console.log(token);
 
+      // add the Token to cookie and send back to  the user
+      // res.cookie("token","sdcsfrfrferfrerdscdffrfsdddfwfwf");
+
+      res.send("Login Successfully...");
+    } else {
+      throw new Error("Password is not Valid...");
+    }
+  } catch (err) {
+    res.status(400).send("Error:" + err.message);
+  }
 });
 
+//Profile API
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
 
+    const { token } = cookies;
 
-
-
-
-
-
-
-
+    //validate my token
+    const decodedMessage = jwt.verify(token, "DEVTINDER");
+    console.log(decodedMessage);
+    res.send("Reading Cookies....");
+  } catch (err) {
+    res.status(401).send("Unauthorized: " + err.message);
+  }
+});
 
 //Get User by email
 
@@ -220,7 +232,6 @@ app.patch("/user/:_id", async (req, res) => {
   const data = req.body; //yhe upadate karna hah frontend se aye ga
 
   try {
-
     //we won't allow to update some field in schema like emain ,first name -this process called Data Sanitization(not exactly that but something is that)
     //this line means that-> when a user tries to update data, only the fields defined in ALLOWED_UPDATES can be modified. It prevents updating restricted fields like password or role
     const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age"];
@@ -229,13 +240,11 @@ app.patch("/user/:_id", async (req, res) => {
       ALLOWED_UPDATES.includes(k)
     );
     if (!isUpdateAllowed) {
-     return res.status(400).send("We can't update this...Sorry");
+      return res.status(400).send("We can't update this...Sorry");
     }
-    if(data?.skills>10){
-        throw new Error("Skills cannot be more than 10...")
-
+    if (data?.skills > 10) {
+      throw new Error("Skills cannot be more than 10...");
     }
-
 
     const user = await User.findByIdAndUpdate(userId, data, {
       returnDocument: "after",
