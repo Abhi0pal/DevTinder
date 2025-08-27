@@ -22,10 +22,14 @@ authRouter.post("/login", async (req, res) => {
     if (isPasswordValid) {
       //all work of cookies and jwt
       //create jwt TOKEN
+      ////TOKEN IS "DEVTINDER"
       const token = jwt.sign({ _id: user._id }, "DEVTINDER");
       // OR send in response body
       // store token in cookie
-      res.cookie("token", token, {
+
+      //TOKEN IS "DEVTINDER"
+      //Cookie is "token"
+      res.cookie("token", token, { 
         httpOnly: true, // prevents client JS from reading cookie
         secure: false, // true if using HTTPS
         sameSite: "strict",
@@ -71,6 +75,16 @@ authRouter.post("/signup", async (req, res) => {
     res.status(400).send("Error: " + err.message);
   }
 });
+
+authRouter.post("/logout",(req,res)=>{
+    res.clearCookie("token",{
+        httpOnly:true,
+        sameSite:"strict",
+        secure:false
+    })
+    res.send("Logout SuccessFull");
+});
+//we have two method of the logout
 
 
 
