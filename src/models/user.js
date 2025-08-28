@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     firstName: {
       type: String,
       required: [true, "First name is Required"],
+      index:true, //this is the way to index our Queary
     },
     lastName: {
       type: String,
